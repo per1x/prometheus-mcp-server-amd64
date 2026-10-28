@@ -5,6 +5,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
@@ -21,3 +23,18 @@ jobs:
           path: prometheus-mcp-server-0.1.11-amd64.tar.gz
           compression-level: 0
           retention-days: 7
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete v0.1.11-amd64 --yes --cleanup-tag 2>/dev/null || true
+          gh release create v0.1.11-amd64 prometheus-mcp-server-0.1.11-amd64.tar.gz \
+            --title "prometheus-mcp-server 0.1.11 (linux/amd64)" \
+            --notes "linux/amd64 build of prometheus-mcp-server 0.1.11 from talkops-ai/talkops-mcp@c7e249b (Apache-2.0).
+
+          \`\`\`bash
+          curl -LO https://github.com/${{ github.repository }}/releases/download/v0.1.11-amd64/prometheus-mcp-server-0.1.11-amd64.tar.gz
+          docker load -i prometheus-mcp-server-0.1.11-amd64.tar.gz
+          \`\`\`
+
+          Image tag after load: \`prometheus-mcp-server:0.1.11-amd64\`"
